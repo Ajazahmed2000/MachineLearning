@@ -1,4 +1,4 @@
-print('Hi')
+print('RAG USING QWEN MODEL')
 
 metadata = {
 
