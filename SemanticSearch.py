@@ -1,5 +1,5 @@
 print('RAG APPLICATION USING QWEN MODEL---')
-
+print("HI")
 metadata = {
 
     'dataset_id': '1234',
