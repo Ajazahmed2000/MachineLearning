@@ -1,4 +1,4 @@
-print('RAG APPLICATION USING QWEN MODEL---')
+print('RAG APPLICATION USING GROK---')
 print("HI")
 metadata = {
 
@@ -19,6 +19,12 @@ from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain_community.document_loaders.html_bs import BSHTMLLoader
 import logging as logger
 from langchain_core.documents import Document
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+
 
 
 FILE_LOADER_TYPE = Union[Type[UnstructuredFileLoader], Type[TextLoader], Type[CSVLoader], Type[BSHTMLLoader]]
@@ -27,7 +33,7 @@ FILE_LOADER_TYPE = Union[Type[UnstructuredFileLoader], Type[TextLoader], Type[CS
 
 allsplit_doc_list = []
 
-file_path = r"C:\Users\ajaza\OneDrive\Desktop\Resume"
+file_path = r"C:\Users\ajaza\OneDrive\Desktop\SemanticSearch\MachineLearning\RAG_doc"
 
 
 def directory_loader(path: str,
@@ -208,7 +214,7 @@ def get_similar_docs_faiss_db(embeddings: Any = None, persist_directory: str = "
 
         db = FAISS.load_local(persist_directory, embeddings, allow_dangerous_deserialization=True)
 
-        docs = db.similarity_search(query, k=k)
+        docs = db.similarity_search(query, k=5)
 
         return docs
 
@@ -219,14 +225,21 @@ def get_similar_docs_faiss_db(embeddings: Any = None, persist_directory: str = "
         raise e
 
 from langchain_community.llms import Ollama
+from langchain_openai import ChatOpenAI
 
 
-llm = Ollama(
-    model="qwen2.5:3b",
-    temperature=0.7,
-    top_p=0.9
+# llm = Ollama(
+#     model="qwen2.5:3b",
+#     temperature=0.7,
+#     top_p=0.9
+# )
+##########using grok
+llm = ChatOpenAI(
+    api_key=os.getenv("API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+    model="qwen/qwen3.6-27b",
+    temperature=0.1
 )
-
 
 
 def generate_response(
@@ -248,15 +261,26 @@ def generate_response(
 
     response = llm.invoke(prompt)
 
-    return response.strip()
+
+    print('Response', response)
+    import re
+    answer = response.content
+
+    # Remove everything between <think> and </think>
+    answer = re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL)
+    answer = answer.strip()
+
+    return answer
 
 
 similar_documents = get_similar_docs_faiss_db(embeddings=embeddings_data,
                                               persist_directory="/temp/faiss_db/" + 'ajaz',
-                                              query="List down the skills mentioned in the resume",
+                                              query="Who were the students who done this project",
                                               k=3)
+print("Similar docs--->", similar_documents)
 prompt_template="Use the following pieces of context {{context}} to provide a concise answer to the question to which steps need to be fetched. If context does not have the answer, just give response \'I\'m sorry, I don\'t have enough information to provide an answer to the question.\'. Question: {{question}}"
 
-answer = generate_response("List down the skills mentioned in the resume", similar_documents,prompt_template)
+answer = generate_response("Who were the students who done this project", similar_documents,prompt_template)
 
 print('Answer:', answer)
+

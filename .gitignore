@@ -1,0 +1,12 @@
+# -----------------------------
+# Environment Variables
+# -----------------------------
+.env
+.env.*
+
+
+
+# Virtual Environment
+.venv/
+
+.idea/
